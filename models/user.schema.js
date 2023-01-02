@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 import AuthRoles from "../utils/authRoles";
+import bcrypt from "bcryptjs";
+import JWT from "jsonwebtoken";
+import crypto from "crypto";
+import config from "../config/index";
 
 const userSchema = mongoose.Schema(
   {
@@ -36,10 +40,38 @@ const userSchema = mongoose.Schema(
   }
 );
 
+// Email validation function
 function validateEmail(email) {
   let emailRegex =
     /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
   return emailRegex.test(email);
 }
+
+// Encrypt password
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+
+  next();
+});
+
+// Schema methods
+userSchema.methods = {
+  comparePassword: async function (enterPassword) {
+    return await bcrypt.compare(enterPassword, this.password);
+  },
+
+  getJwtToken: function () {
+    JWT.sign(
+      {
+        _id: this._id,
+        role: this.role,
+      },
+      config.JWT_SECRET,
+      { expiresIn: config.JWT_EXPIRY }
+    );
+  },
+};
 
 export default mongoose.model("User", userSchema);
