@@ -32,8 +32,8 @@ const userSchema = mongoose.Schema(
       enum: Object.values(AuthRoles),
       default: AuthRoles.USER,
     },
-    forgetPasswordToken: String,
-    forgetPasswordExpiry: Date,
+    forgotPasswordToken: String,
+    forgotPasswordExpiry: Date,
   },
   {
     timestamps: true,
@@ -71,6 +71,17 @@ userSchema.methods = {
       config.JWT_SECRET,
       { expiresIn: config.JWT_EXPIRY }
     );
+  },
+
+  generateForgotPasswordToken: function () {
+    const forgotToken = crypto.randomBytes(20).toString("hex");
+
+    this.forgotPasswordToken = crypto
+      .createHash("sha256")
+      .update(forgotToken)
+      .digest("hex");
+
+    this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
   },
 };
 
