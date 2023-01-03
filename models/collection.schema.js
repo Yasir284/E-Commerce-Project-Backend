@@ -4,7 +4,7 @@ const collectionSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      require: [true, "Collection name is require"],
+      required: [true, "Collection name is require"],
       maxLength: [120, "Collection name must be less than 120 characters"],
       trim: true,
     },

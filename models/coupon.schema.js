@@ -4,7 +4,7 @@ const couponSchema = mongoose.Schema(
   {
     code: {
       type: String,
-      require: [true, "Coupon code is required"],
+      required: [true, "Coupon code is required"],
     },
     discount: {
       type: Number,

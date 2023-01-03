@@ -9,12 +9,12 @@ const userSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      require: [true, "Name is required"],
+      required: [true, "Name is required"],
       maxLength: [50, "Name cann't be larger than 50 letters"],
     },
     email: {
       type: String,
-      require: [true, "Email is required"],
+      required: [true, "Email is required"],
       validate: {
         validator: validateEmail(email),
         message: "E-mail is invalid",
@@ -23,7 +23,7 @@ const userSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      require: [true, "Password is required"],
+      required: [true, "Password is required"],
       minLength: [8, "Password must be atleast 8 characters"],
       select: false,
     },
