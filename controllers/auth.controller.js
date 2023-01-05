@@ -1,6 +1,7 @@
 import User from "../models/user.schema";
 import asyncHandler from "../services/asyncHandler";
 import CustomeError from "../utils/customeError";
+import mailHelper from "../utils/mailHelper";
 
 const cookieOptions = {
   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -96,4 +97,52 @@ export const logout = asyncHandler(async (_req, res) => {
     httpOnly: true,
   });
   res.status(200).json({ success: true, message: "Logged out" });
+});
+
+/**********************************************************************
+ @FORGOT_PASSWORD
+ @route http://localhost:4000/api/auth/password/reset/:resetToken
+ @description User will submit email and generate token
+ @parameters email
+ @return success message - send email
+ **********************************************************************/
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) throw new CustomeError("Email is required", 400);
+
+  const user = await User.findOne({ email });
+
+  if (!user) throw new CustomeError("User not found", 400);
+
+  const resetToken = await user.generateForgotPasswordToken();
+
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${req.protocol}://${req.et(
+    "host"
+  )}/api/auth/password/reset/${resetToken}\n\n`;
+
+  const text = `Your password reset url is \n\n ${resetUrl}`;
+
+  try {
+    const options = {
+      email: user.email,
+      subject: "Password reset email for website",
+      text,
+    };
+
+    await mailHelper(options);
+
+    res
+      .status(200)
+      .json({ success: true, message: `Email send to ${user.email}` });
+  } catch (error) {
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordExpiry = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    throw new CustomeError(error.message || "Failed to send Email", 500);
+  }
 });
