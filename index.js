@@ -1,9 +1,11 @@
+import app from "./app.js";
 import mongoose from "mongoose";
-import app from "./app";
-import config from "./config/index";
+import config from "./config/index.js";
 
 (async () => {
   try {
+    mongoose.set("strictQuery", false);
+
     mongoose.connect(config.MONGODB_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
