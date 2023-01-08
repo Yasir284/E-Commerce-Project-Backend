@@ -15,7 +15,6 @@ const cookieOptions = {
  @parameters name, email, password
  @return User object
  **********************************************************************/
-
 export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -53,7 +52,6 @@ export const signUp = asyncHandler(async (req, res) => {
  @parameters email, password
  @return User object
  **********************************************************************/
-
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -101,7 +99,7 @@ export const logout = asyncHandler(async (_req, res) => {
 
 /**********************************************************************
  @FORGOT_PASSWORD
- @route http://localhost:4000/api/auth/password/reset/:resetToken
+ @route http://localhost:4000/api/auth/password/forgot
  @description User will submit email and generate token
  @parameters email
  @return success message - send email
@@ -145,4 +143,16 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
     throw new CustomeError(error.message || "Failed to send Email", 500);
   }
+});
+
+/**********************************************************************
+ @RESET_PASSWORD
+ @route http://localhost:4000/api/auth/password/reset/:resetPasswordToken
+ @description User will reset password based on Url token
+ @parameters passoword
+ @return success message - send email
+ **********************************************************************/
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { password } = req.body;
 });
