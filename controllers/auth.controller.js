@@ -202,8 +202,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
  @CHANGE_PASSWORD
  @request_type POST
  @route http://localhost:4000/api/auth/password/change
- @description User will change password
- @parameters user from auth middleware, password and confirm password
+ @description Check if user is logged in using middleware and change password
+ @parameters userId from req.user, password and confirm password
  @return success message
  **********************************************************************/
 
@@ -232,7 +232,7 @@ export const changePassword = asyncHandler(async (req, res) => {
  @GET_PROFILE
  @request_type GET
  @route http://localhost:4000/api/auth/profile
- @description Getting user profile
+ @description Check for token and populate req.user
  @parameters
  @return User object
  **********************************************************************/
