@@ -11,11 +11,13 @@ const cookieOptions = {
 
 /**********************************************************************
  @SIGNUP
+ @request_type POST
  @route http://localhost:4000/api/auth/signup
  @description User signup controller for new user
  @parameters name, email, password
  @return User object
  **********************************************************************/
+
 export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -48,11 +50,13 @@ export const signUp = asyncHandler(async (req, res) => {
 
 /**********************************************************************
  @LOGIN
+ @request_type POST
  @route http://localhost:4000/api/auth/login
  @description User login controller
  @parameters email, password
  @return User object
  **********************************************************************/
+
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -85,11 +89,13 @@ export const login = asyncHandler(async (req, res) => {
 
 /**********************************************************************
  @LOGOUT
+ @request_type GET
  @route http://localhost:4000/api/auth/logout
  @description User logout by clearing user cookies
  @parameters 
  @return success message
  **********************************************************************/
+
 export const logout = asyncHandler(async (_req, res) => {
   res.cookie("token", null, {
     expires: new Date(Date.now()),
@@ -100,11 +106,13 @@ export const logout = asyncHandler(async (_req, res) => {
 
 /**********************************************************************
  @FORGOT_PASSWORD
+ @request_type POST
  @route http://localhost:4000/api/auth/password/forgot
  @description User will submit email and generate token
  @parameters email
  @return success message - send email
  **********************************************************************/
+
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -148,6 +156,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
 /**********************************************************************
  @RESET_PASSWORD
+ @request_type POST
  @route http://localhost:4000/api/auth/password/reset/:resetPasswordToken
  @description User will reset password based on Url token
  @parameters token from url, password and confirm password
@@ -187,4 +196,34 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   res.cookie("token", token, cookieOptions);
   res.status(200).json({ success: true, user });
+});
+
+/**********************************************************************
+ @CHANGE_PASSWORD
+ @request_type POST
+ @route http://localhost:4000/api/auth/password/change
+ @description User will change password
+ @parameters user from auth middleware, password and confirm password
+ @return success message
+ **********************************************************************/
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { password, confirmPassword } = req.body;
+  const userId = req.user._id;
+
+  const user = await User.findById(userId).select("+password");
+  console.log(user);
+
+  if (!user) {
+    throw new CustomeError("User not found", 400);
+  }
+
+  if (password !== confirmPassword) {
+    throw new CustomeError("Password and Confirm Password must be same");
+  }
+
+  user.password = password;
+  user.save();
+
+  res.status(200).json({ success: true, message: "Password changed" });
 });
