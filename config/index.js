@@ -7,11 +7,17 @@ const config = {
   JWT_EXPIRY: process.env.JWT_EXPIRY || "30d",
   MONGODB_URL: process.env.MONGODB_URL,
   PORT: process.env.PORT || 4001,
+
   SMTP_MAIL_EMAIL: process.env.SMTP_MAIL_EMAIL,
   SMTP_MAIL_HOST: process.env.SMTP_MAIL_HOST,
   SMTP_MAIL_PORT: process.env.SMTP_MAIL_PORT,
   SMTP_MAIL_USERNAME: process.env.SMTP_MAIL_USERNAME,
   SMTP_MAIL_PASSWORD: process.env.SMTP_MAIL_PASSWORD,
+
+  S3_ACCESS_KEY: process.env.S3_ACCESS_KEY,
+  S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
+  S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+  S3_REGION: process.env.S3_REGION,
 };
 
 export default config;

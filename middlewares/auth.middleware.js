@@ -29,3 +29,5 @@ const isLoggedIn = asyncHandler(async (req, _res, next) => {
     throw new CustomeError("Not authorized to access the route", 400);
   }
 });
+
+export default isLoggedIn;
