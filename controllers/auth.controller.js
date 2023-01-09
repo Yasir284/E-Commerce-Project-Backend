@@ -227,3 +227,22 @@ export const changePassword = asyncHandler(async (req, res) => {
 
   res.status(200).json({ success: true, message: "Password changed" });
 });
+
+/**********************************************************************
+ @GET_PROFILE
+ @request_type GET
+ @route http://localhost:4000/api/auth/profile
+ @description Getting user profile
+ @parameters
+ @return User object
+ **********************************************************************/
+
+export const getProfile = asyncHandler(async (req, res) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new CustomeError("User not found", 400);
+  }
+
+  res.status(200).json({ success: true, user });
+});
