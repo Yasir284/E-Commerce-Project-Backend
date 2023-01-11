@@ -10,6 +10,7 @@ import config from "./config/index.js";
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
+    console.log("DB CONNECTED");
 
     app.on("error", (err) => {
       console.log("ERROR: ", err);

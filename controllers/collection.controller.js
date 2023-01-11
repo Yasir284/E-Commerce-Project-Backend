@@ -85,7 +85,7 @@ export const deleteCollection = asyncHandler(async (req, res) => {
 /**********************************************************************
  @GET_COLLECTIONS
  @request_type DELETE 
- @route http://localhost:4000/api/collection/get
+ @route http://localhost:4000/api/collection/getcollections
  @description Return all collection
  @parameters
  @return Collection object

@@ -47,11 +47,6 @@ const productSchema = mongoose.Schema(
       type: String,
     },
 
-    stokes: {
-      type: Number,
-      default: 0,
-    },
-
     photos: [
       {
         secure_url: {
@@ -72,6 +67,11 @@ const productSchema = mongoose.Schema(
     totalReviews: {
       type: Number,
       required: true,
+      default: 0,
+    },
+
+    stokes: {
+      type: Number,
       default: 0,
     },
 
