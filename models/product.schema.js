@@ -1,93 +1,52 @@
 import mongoose from "mongoose";
 
-const reviewSchema = mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  comment: {
-    type: String,
-    default: null,
-  },
-  rating: {
-    type: Number,
-    required: true,
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "User",
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now(),
-  },
-});
-
 const productSchema = mongoose.Schema(
   {
     name: {
       type: String,
       required: [true, "Product name is required"],
-      maxLength: [120, "Product name must be less than 120 characters"],
-      trim: true,
+      maxLength: [100, "Name must be less than 100 characters"],
     },
-
     price: {
       type: Number,
-      required: [true, "Product Price is required"],
-      maxLength: [5, "Product price must be less than 5 digits"],
+      required: [true, "Product price is required"],
+      maxLength: [6, "Price must be less than 6 digits"],
     },
-
     description: {
       type: String,
+      required: [true, "Product description is required"],
     },
-
-    photos: [
+    rating: { type: Number, default: 0 },
+    numOfReviews: { type: Number, default: 0 },
+    image: [
       {
-        secure_url: {
-          type: String,
-          required: true,
-        },
+        secure_url: { type: String, required: true },
       },
     ],
-
-    review: [reviewSchema],
-
-    avgAating: {
+    reviews: [
+      {
+        name: { type: String, required: [true, "User name is required"] },
+        rating: { type: Number, required: [true, "Rating is required"] },
+        comment: { type: Number, required: [true, "Comment is required"] },
+        createdAt: { type: Date, default: Date.now() },
+        updatedAt: { type: Date, default: Date.now() },
+      },
+    ],
+    stocks: {
       type: Number,
-      required: true,
+      maxLength: [4, "Stocks must be less than 4 digits"],
       default: 0,
     },
-
-    totalReviews: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-
-    stokes: {
-      type: Number,
-      default: 0,
-    },
-
     sold: {
       type: Number,
-      default: 0,
+      defauld: 0,
     },
-
     collectionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Collection",
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export default mongoose.model("Product", productSchema);
