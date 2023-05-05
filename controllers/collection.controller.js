@@ -1,80 +1,72 @@
-import Collection from "../models/collection.schema";
-import asyncHandler from "../services/asyncHandler";
-import CustomeError from "../utils/customeErrors";
+import Collection from "../models/collection.schema.js";
+import CustomError from "../utils/customError.js";
+import asyncHandler from "../services/asyncHandler.js";
 
 /**********************************************************************
  @CREATE_COLLECTION
- @request_type POST 
- @route http://localhost:4000/api/collection/create
- @description Create new collection
- @parameters name
- @return success message and collection object
+ @request_type POST
+ @route http://localhost:4000/api/v1/collection/create
+ @description Getting collection name from user and creating new collection 
+ @parameters collection name
+ @return Success message and collection object
  **********************************************************************/
 export const createCollection = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
-  if (!name) {
-    throw new CustomeError("Collection name is required", 400);
-  }
+  if (!name) throw new CustomError("Product name is required", 400);
 
   const collection = await Collection.create({ name });
 
   res.status(200).json({
     success: true,
-    message: "Collection created with success",
+    message: "New collection created",
     collection,
   });
 });
 
 /**********************************************************************
- @UPDATE_COLLECTION
- @request_type PUT 
- @route http://localhost:4000/api/collection/update
- @description Update collection
- @parameters collectionId and name
- @return  success message and collection object
+ @UPADTE_COLLECTION
+ @request_type PUT
+ @route http://localhost:4000/api/v1/collection/update/:collectionId
+ @description Getting collection name from user and updating collection 
+ @parameters collection name and id
+ @return Success message and collection object
  **********************************************************************/
 export const updateCollection = asyncHandler(async (req, res) => {
-  const { id: collectionId } = req.params;
   const { name } = req.body;
+  const { collectionId } = req.params;
 
-  if (!name) {
-    throw new CustomeError("Collection name is required", 400);
-  }
+  if (!name) throw new CustomError("All fields are mandatory", 400);
 
-  const updateCollection = await Collection.findByIdAndUpdate(
-    collectionId,
+  const updatedCollection = await Collection.findByIdAndUpdate(
+    { _id: collectionId },
     { name },
-    { new: true }
+    { new: true, runValidators: true }
   );
 
-  if (!updateCollection) {
-    throw new CustomeError("Collection not found", 400);
-  }
+  console.log(updatedCollection);
 
   res.status(200).json({
     success: true,
     message: "Collection updated successfully",
-    collection: updateCollection,
+    updatedCollection,
   });
 });
 
 /**********************************************************************
  @DELETE_COLLECTION
- @request_type DELETE 
- @route http://localhost:4000/api/collection/delete
- @description Delete collection
- @parameters collectionId and name
- @return success message
+ @request_type DELETE
+ @route http://localhost:4000/api/v1/collection/delete/:collectionId
+ @description Getting collection name from user and creating new collection 
+ @parameters collection id
+ @return Success message
  **********************************************************************/
 export const deleteCollection = asyncHandler(async (req, res) => {
-  const { id: collectionId } = req.params;
+  const { collectionId } = req.params;
 
-  const deleteCollection = await Collection.findByIdAndDelete(collectionId);
+  const deletedCollection = await Collection.findByIdAndDelete(collectionId);
 
-  if (!deleteCollection) {
-    throw new CustomeError("Collection not found", 400);
-  }
+  deleteCollection.remove();
 
   res.status(200).json({
     success: true,
@@ -83,20 +75,17 @@ export const deleteCollection = asyncHandler(async (req, res) => {
 });
 
 /**********************************************************************
- @GET_COLLECTIONS
- @request_type DELETE 
- @route http://localhost:4000/api/collection/getcollections
- @description Return all collection
- @parameters
- @return Collection object
+ @GET_COLLECTION
+ @request_type GET
+ @route http://localhost:4000/api/v1/collection/get
+ @description Getting all collection 
+ @parameters 
+ @return collection object
  **********************************************************************/
-
-export const getCollections = asyncHandler(async (_req, res) => {
+export const getCollections = asyncHandler(async (req, res) => {
   const collections = await Collection.find();
 
-  if (!collections) {
-    throw new CustomeError("Collections not found", 400);
-  }
+  if (!collections) throw new CustomError("Error in getting collections", 400);
 
   res.status(200).json({
     success: true,
