@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import AuthRoles from "../utils/authRoles";
+import AuthRoles from "../utils/authRoles.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
 import crypto from "crypto";
-import config from "../config/index";
+import config from "../config/index.js";
 
 const userSchema = mongoose.Schema(
   {
@@ -15,10 +15,6 @@ const userSchema = mongoose.Schema(
     email: {
       type: String,
       required: [true, "Email is required"],
-      validate: {
-        validator: validateEmail(email),
-        message: "E-mail is invalid",
-      },
       unique: true,
     },
     password: {
@@ -41,11 +37,11 @@ const userSchema = mongoose.Schema(
 );
 
 // Email validation function
-function validateEmail(email) {
-  let emailRegex =
+userSchema.path("email").validate(function (email) {
+  var emailRegex =
     /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-  return emailRegex.test(email);
-}
+  return emailRegex.test(email); // Assuming email has a text attribute
+}, "Email is Invalid");
 
 // Encrypt password
 userSchema.pre("save", async function (next) {
@@ -63,7 +59,7 @@ userSchema.methods = {
   },
 
   getJwtToken: function () {
-    JWT.sign(
+    return JWT.sign(
       {
         _id: this._id,
         role: this.role,
@@ -82,6 +78,8 @@ userSchema.methods = {
       .digest("hex");
 
     this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
+
+    return forgotToken;
   },
 };
 

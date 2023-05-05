@@ -1,8 +1,8 @@
-import User from "../models/user.schema";
-import config from "../config/index";
+import User from "../models/user.schema.js";
+import config from "../config/index.js";
 import JWT from "jsonwebtoken";
-import asyncHandler from "../services/asyncHandler";
-import CustomeError from "../utils/customeError";
+import asyncHandler from "../services/asyncHandler.js";
+import CustomeError from "../utils/customError.js";
 
 const isLoggedIn = asyncHandler(async (req, _res, next) => {
   let token;
@@ -11,8 +11,10 @@ const isLoggedIn = asyncHandler(async (req, _res, next) => {
     ? req.header("Authorization").replace("Bearer ", "")
     : null;
 
-  if (req.cookie.token || bearerToken) {
-    token = req.cookie.token || bearerToken;
+  console.log(req.cookies);
+
+  if (req.cookies.token || bearerToken) {
+    token = req.cookies.token || bearerToken;
   }
 
   if (!token) {

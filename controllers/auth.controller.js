@@ -1,18 +1,19 @@
-import User from "../models/user.schema";
-import asyncHandler from "../services/asyncHandler";
-import CustomeError from "../utils/customeError";
-import mailHelper from "../utils/mailHelper";
+import User from "../models/user.schema.js";
+import asyncHandler from "../services/asyncHandler.js";
+import CustomError from "../utils/customError.js";
+import mailHelper from "../utils/mailHelper.js";
 import crypto from "crypto";
 
-const cookieOptions = {
-  expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+// Setting cookies options
+const cookiesOptions = {
   httpOnly: true,
+  expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
 };
 
 /**********************************************************************
  @SIGNUP
  @request_type POST
- @route http://localhost:4000/api/auth/signup
+ @route http://localhost:4000/api/v1/auth/signup
  @description User signup controller for new user
  @parameters name, email, password
  @return User object
@@ -21,150 +22,146 @@ const cookieOptions = {
 export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  if (!(name && email && password)) {
-    throw new CustomeError("Please fill all the fields", 400);
-  }
+  // Check if all field are there
+  if (!(name && email && password))
+    throw new CustomError("Please fill all the fields", 400);
 
-  const isUserExist = await User.find({ email });
+  // Check if user already exists
+  const isUserExists = await User.findOne({ email });
 
-  if (isUserExist) {
-    throw new CustomeError("User alread exists", 400);
-  }
+  if (isUserExists) throw new CustomError("User already exists", 400);
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-  });
+  const user = await User.create({ name, email, password });
 
+  //   Creating a token
   const token = user.getJwtToken();
   user.password = undefined;
 
-  res.cookie("token", token, cookieOptions);
+  // Sending response
+  res.cookie("token", token, cookiesOptions);
   res.status(200).json({
     success: true,
-    token,
     user,
+    token,
   });
 });
 
 /**********************************************************************
  @LOGIN
  @request_type POST
- @route http://localhost:4000/api/auth/login
- @description User login controller
+ @route http://localhost:4000/api/v1/auth/login
+ @description Login controller for existing user
  @parameters email, password
  @return User object
  **********************************************************************/
-
-export const login = asyncHandler(async (req, res) => {
+export const logIn = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!(email && password)) {
-    throw new CustomeError("Please fill all the fields", 400);
-  }
+  // Check if all field are there
+  if (!(email && password))
+    throw new CustomError("Please fill all the fields", 400);
 
-  const user = await User.find({ email }).select("+password");
+  // Check if user already exists
+  const user = await User.findOne({ email }).select("+password");
+  console.log(user);
+  if (!user) throw new CustomError("Invalid credentials", 400);
 
-  if (!user) {
-    throw new CustomeError("Invalid credentials", 400);
-  }
+  // Validate password
+  const isPasswordCorrect = await user.comparePassword(password);
+  if (!isPasswordCorrect) throw new CustomError("Invalid credentials", 400);
 
-  const isPasswordMatched = await user.comparePassword(password);
-
-  if (!isPasswordMatched) {
-    throw new CustomeError("Invalid credentials", 400);
-  }
-
+  //   Creating a token
   const token = user.getJwtToken();
   user.password = undefined;
 
-  res.cookie("token", token, cookieOptions);
+  // Sending response
+  res.cookie("token", token, cookiesOptions);
   res.status(200).json({
     success: true,
-    token,
     user,
+    token,
   });
 });
 
 /**********************************************************************
  @LOGOUT
  @request_type GET
- @route http://localhost:4000/api/auth/logout
- @description User logout by clearing user cookies
+ @route http://localhost:4000/api/v1/auth/logout
+ @description Logging out user by clearing cookie
  @parameters 
- @return success message
+ @return Success message
  **********************************************************************/
 
-export const logout = asyncHandler(async (_req, res) => {
-  res.cookie("token", null, {
-    expires: new Date(Date.now()),
-    httpOnly: true,
-  });
-  res.status(200).json({ success: true, message: "Logged out" });
+export const logOut = asyncHandler(async (_req, res) => {
+  res.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true });
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 });
 
 /**********************************************************************
  @FORGOT_PASSWORD
- @request_type POST
- @route http://localhost:4000/api/auth/password/forgot
- @description User will submit email and generate token
- @parameters email
- @return success message - send email
+ @request_type PUT
+ @route http://localhost:4000/api/v1/auth/password/forgot
+ @description  Getting email from user and sending reset passowrd url to the user through email 
+ @parameters eamil
+ @return Success message
  **********************************************************************/
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  if (!email) throw new CustomeError("Email is required", 400);
+  if (!email) throw new CustomError("Email is required", 400);
 
+  // Validate email
   const user = await User.findOne({ email });
+  console.log(user);
 
-  if (!user) throw new CustomeError("User not found", 400);
+  if (!user) throw new CustomError("Invalid credentials", 400);
 
+  // Create forgot password token
   const resetToken = await user.generateForgotPasswordToken();
+  console.log(resetToken);
 
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${req.protocol}://${req.get(
+  // Create url to be sent
+  const url = `${req.protocol}://${req.get(
     "host"
-  )}/api/auth/password/reset/${resetToken}`;
+  )}/api/v1/auth/password/reset/${resetToken}`;
 
-  const text = `Your password reset url is \n\n ${resetUrl} \n\n`;
-
+  // Send mail
   try {
     const options = {
       email: user.email,
       subject: "Password reset email for website",
-      text,
+      text: `Your reset passwrod url is ${url}`,
     };
 
     await mailHelper(options);
 
     res
       .status(200)
-      .json({ success: true, message: `Email send to ${user.email}` });
-  } catch (error) {
+      .json({ success: true, message: `Email sent to ${user.email}` });
+  } catch (err) {
     user.forgotPasswordToken = undefined;
     user.forgotPasswordExpiry = undefined;
 
-    await user.save({ validateBeforeSave: false });
+    user.save({ validateBeforeSave: true });
 
-    throw new CustomeError(error.message || "Failed to send Email", 500);
+    throw new CustomError(err.message || "Error in sending email", 500);
   }
 });
 
 /**********************************************************************
  @RESET_PASSWORD
- @request_type POST
- @route http://localhost:4000/api/auth/password/reset/:resetPasswordToken
- @description User will reset password based on Url token
- @parameters token from url, password and confirm password
+ @request_type PUT
+ @route http://localhost:4000/api/v1/auth/password/reset/:resetToken
+ @description Reset password based on the token given in the url
+ @parameters resetPasswordToken, password and confirmPassowrd 
  @return User object
  **********************************************************************/
 
 export const resetPassword = asyncHandler(async (req, res) => {
-  const { token: resetToken } = req.params;
+  const { resetToken } = req.params;
   const { password, confirmPassword } = req.body;
 
   const resetPasswordToken = crypto
@@ -172,77 +169,88 @@ export const resetPassword = asyncHandler(async (req, res) => {
     .update(resetToken)
     .digest("hex");
 
+  // find user based on resetPasswordToken
   const user = await User.findOne({
     forgotPasswordToken: resetPasswordToken,
     forgotPasswordExpiry: { $gt: Date.now() },
   });
 
-  if (!user) {
-    throw new CustomeError("Token is Invalid or Expired", 400);
-  }
+  if (!user) throw new CustomError("Token is Invalid or Expired", 400);
 
-  if (password !== confirmPassword) {
-    throw new CustomeError("Password and Confirm Password must be same", 400);
-  }
+  // Check if password and confirmPassword is same
+  if (password != confirmPassword)
+    throw new CustomError("Password and Confirm Password does not match", 400);
 
   user.password = password;
-  user.forgotPasswordExpiry = undefined;
   user.forgotPasswordToken = undefined;
+  user.forgotPasswordExpiry = undefined;
 
   await user.save();
 
   const token = user.getJwtToken();
   user.password = undefined;
 
-  res.cookie("token", token, cookieOptions);
-  res.status(200).json({ success: true, user });
+  res.cookie("token", token, cookiesOptions);
+
+  res.status(200).json({
+    success: true,
+    message: "Your password has been reset",
+    token,
+    user,
+  });
 });
 
 /**********************************************************************
  @CHANGE_PASSWORD
- @request_type POST
- @route http://localhost:4000/api/auth/password/change
- @description Check if user is logged in using middleware and change password
- @parameters userId from req.user, password and confirm password
- @return success message
+ @request_type PUT
+ @route http://localhost:4000/api/v1/auth/password/change
+ @description Validate user and change the password
+ @parameters user id, password and confirmPassowrd 
+ @return Success message
  **********************************************************************/
 
 export const changePassword = asyncHandler(async (req, res) => {
   const { password, confirmPassword } = req.body;
-  const userId = req.user._id;
+  const { _id: userId } = req.user;
 
-  const user = await User.findById(userId).select("+password");
-  console.log(user);
+  if (!(password && confirmPassword))
+    throw new CustomError("All field are mandatory", 400);
 
-  if (!user) {
-    throw new CustomeError("User not found", 400);
-  }
+  // find user based on resetPasswordToken
+  const user = await User.findById({
+    _id: userId,
+  });
 
-  if (password !== confirmPassword) {
-    throw new CustomeError("Password and Confirm Password must be same");
-  }
+  if (!user) throw new CustomError("User not found", 400);
+
+  // Check if password and confirmPassword is same
+  if (password != confirmPassword)
+    throw new CustomError("Password and Confirm Password does not match", 400);
 
   user.password = password;
-  user.save();
 
-  res.status(200).json({ success: true, message: "Password changed" });
+  await user.save();
+  user.password = undefined;
+
+  res.status(200).json({
+    success: true,
+    message: "Your password has been changed",
+  });
 });
 
 /**********************************************************************
  @GET_PROFILE
  @request_type GET
- @route http://localhost:4000/api/auth/profile
- @description Check for token and populate req.user
- @parameters
+ @route http://localhost:4000/api/v1/auth/profile
+ @description Validate user and change the password
+ @parameters 
  @return User object
  **********************************************************************/
 
 export const getProfile = asyncHandler(async (req, res) => {
   const { user } = req;
 
-  if (!user) {
-    throw new CustomeError("User not found", 400);
-  }
+  if (!user) throw new CustomError("User not found", 400);
 
   res.status(200).json({ success: true, user });
 });
