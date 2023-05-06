@@ -4,7 +4,7 @@ import JWT from "jsonwebtoken";
 import asyncHandler from "../services/asyncHandler.js";
 import CustomeError from "../utils/customError.js";
 
-const isLoggedIn = asyncHandler(async (req, _res, next) => {
+export const isLoggedIn = asyncHandler(async (req, _res, next) => {
   let token;
 
   const bearerToken = req.header("Authorization")
@@ -32,4 +32,11 @@ const isLoggedIn = asyncHandler(async (req, _res, next) => {
   }
 });
 
-export default isLoggedIn;
+export const accessibleTO = (role) => {
+  return asyncHandler(async (req, _res, next) => {
+    if (req.user.role !== role)
+      throw new CustomeError("Not authorized to access this route", 400);
+
+    next();
+  });
+};

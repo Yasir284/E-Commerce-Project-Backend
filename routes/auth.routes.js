@@ -8,7 +8,7 @@ import {
   changePassword,
   getProfile,
 } from "../controllers/auth.controller.js";
-import isLoggedIn from "../middlewares/auth.middleware.js";
+import { isLoggedIn } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
