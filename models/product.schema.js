@@ -18,7 +18,7 @@ const productSchema = mongoose.Schema(
     },
     rating: { type: Number, default: 0 },
     numOfReviews: { type: Number, default: 0 },
-    image: [
+    images: [
       {
         secure_url: { type: String, required: true },
       },
